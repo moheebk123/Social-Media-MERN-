@@ -1,10 +1,17 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
+// CLOUDINARY_CLOUD_NAME="daeipji9b"
+// CLOUDINARY_API_KEY="346262785469417"
+// CLOUDINARY_API_SECRET="91qnF0IbDVYYi-bI-IIfAruyNPc"
+
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: "daeipji9b",
+  api_key: "346262785469417",
+  api_secret: "91qnF0IbDVYYi-bI-IIfAruyNPc",
+  // cloud_name: String(process.env.CLOUDINARY_CLOUD_NAME),
+  // api_key: String(process.env.CLOUDINARY_API_KEY),
+  // api_secret: String(process.env.CLOUDINARY_API_SECRET),
 });
 
 const uploadOnCloudinary = async (localFilePath) => {
@@ -15,11 +22,13 @@ const uploadOnCloudinary = async (localFilePath) => {
     });
 
     if (response) {
-      console.log("File uploaded on cloudinary.", response.url);
+      fs.unlinkSync(localFilePath);
+      return response;
     }
   } catch (error) {
+    console.log(error);
     fs.unlinkSync(localFilePath);
-    return "File removed from server.";
+    return null;
   }
 };
 
