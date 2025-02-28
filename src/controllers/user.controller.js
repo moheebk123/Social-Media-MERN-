@@ -121,7 +121,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   const foundUser = await User.findOne({
-    $or: [{ username, email }],
+    $or: [{ email}, {username}],
   });
 
   if (!foundUser) {
@@ -150,7 +150,7 @@ const loginUser = asyncHandler(async (req, res) => {
     secure: true,
   };
 
-  res
+  return res
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
@@ -193,7 +193,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Unauthorized request");
   }
 
-  const decodedInfo = await jwt.verify(
+  const decodedInfo = jwt.verify(
         token,
         process.env.ACCESS_TOKEN_SECRET
   );
@@ -215,7 +215,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
   const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id)
 
-  res
+  return res
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
@@ -223,6 +223,24 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       200,
       {accessToken, refreshToken, ...user}
     )
+})
+
+const changePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+
+  const user = await User.findById(req.user._id);
+
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "Incorrect old password");
+  }
+
+  user.password = newPassword;
+
+  user.save({validateBeforeSave: false})
+
+  return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"))
 })
 
 export { registerUser, loginUser, logoutUser, refreshAccessToken };
