@@ -3,7 +3,7 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { User } from "../models/user.models.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -121,7 +121,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   const foundUser = await User.findOne({
-    $or: [{ email}, {username}],
+    $or: [{ email }, { username }],
   });
 
   if (!foundUser) {
@@ -183,22 +183,22 @@ const logoutUser = asyncHandler(async (req, res) => {
     .status(200)
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
-    .json(new ApiResponse(200, {}, "User logout successfully."))
+    .json(new ApiResponse(200, {}, "User logout successfully."));
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+  const incomingRefreshToken =
+    req.cookies.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Unauthorized request");
   }
 
-  const decodedInfo = jwt.verify(
-        token,
-        process.env.ACCESS_TOKEN_SECRET
-  );
+  const decodedInfo = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-  const user = await User.findById(decodedInfo?._id).select("-password -refreshToken")
+  const user = await User.findById(decodedInfo?._id).select(
+    "-password -refreshToken"
+  );
 
   if (!user) {
     throw new ApiError(401, "Invalid refresh token");
@@ -211,19 +211,18 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
-  }
+  };
 
-  const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id)
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    user._id
+  );
 
   return res
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json(
-      200,
-      {accessToken, refreshToken, ...user}
-    )
-})
+    .json(200, { accessToken, refreshToken, ...user });
+});
 
 const changePassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
@@ -238,9 +237,22 @@ const changePassword = asyncHandler(async (req, res) => {
 
   user.password = newPassword;
 
-  user.save({validateBeforeSave: false})
+  user.save({ validateBeforeSave: false });
 
-  return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"))
-})
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully"));
+});
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken };
+const getCurrentUser = asyncHandler(async (req, res) =>
+  res.status(200).json(200, req.user, "Current user fetched successfully")
+);
+
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  changePassword,
+  getCurrentUser,
+};
